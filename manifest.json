@@ -1,0 +1,21 @@
+{
+    "manifest_version": 2,
+    "name": "Nouvel onglet Laurent",
+    "version": "1.0",
+    "description": "Nouvel onglet Laurent",
+    "author": "Laurent FAVOLE",
+    "chrome_url_overrides" : {
+        "newtab": "index.html"
+    },
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "newtab@lfavole.com"
+        }
+    },
+    "permissions": [
+        "storage"
+    ],
+    "icons": {
+        "1024": "logo.jpg"
+    }
+}
