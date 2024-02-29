@@ -1,64 +1,82 @@
 * {
-    margin: 0;
-    padding: 0;
     box-sizing: border-box;
 }
-
-html, body {
-    height: 100%;
-    width: 100%;
-}
 body {
-    background: black;
+    font-family: Montserrat, Arial, Helvetica, sans-serif;
+    font-size: 4em;
+    line-height: 1em;
+    text-align: center;
+    margin: 0;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    min-height: 100vh;
 }
 
+main {
+    display: inline-block;
+    margin: auto;
+}
+main > * {
+    margin: 0.3em;
+}
+
+/* https://codingtorque.com/digital-clock-using-html-css-and-javascript/ */
 .clock {
-    height: 20vh;
-    color: white;
-    font-size: 22vh;
-    font-family: sans-serif;
-    line-height: 20.4vh;
-    display: flex;
+    display: inline-flex;
+    font-size: 1em;
+    height: 0.91em;
+    line-height: 0.93em;
     position: relative;
-    /*background: green;*/
     overflow: hidden;
 }
 
-.clock::before, .clock::after {
-    content: "";
-    width: 7ch;
-    height: 3vh;
-    background: linear-gradient(to top, transparent, black);
-    position: absolute;
-    z-index: 2;
-}
-.clock::after {
-    bottom: 0;
-    background: linear-gradient(to bottom, transparent, black);
-}
 .clock > div {
     display: flex;
 }
+.number {
+    width: 0.7em;
+    text-align: center;
+}
+:first-child > .number {
+    text-align: right;
+}
+:last-child > .number {
+    text-align: left;
+}
 
 .tick {
-    line-height: 17vh;
-    transition: opacity 0.6s;
+    line-height: 0.77em;
+    transition: opacity 0.8s;
 }
-.tick-hidden {
+.tick-hidden .tick {
     opacity: 0;
 }
 
-.move {
+/* .move {
     animation: move 0.6s;
+} */
+.move :first-child {
+    animation: move1 0.6s forwards;
 }
-@keyframes move {
-    from {
-        transform: translateY(0vh);
+.move :last-child {
+    animation: move2 0.6s forwards;
+}
+@keyframes move1 {
+    0% {
+        opacity: 1;
+        transform: translateY(0%);
     }
-    to {
-        transform: translateY(-20vh);
+    100% {
+        opacity: 0;
+        transform: translateY(-100%);
+    }
+}
+@keyframes move2 {
+    0% {
+        opacity: 0;
+        transform: translateY(0%);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(-100%);
     }
 }
