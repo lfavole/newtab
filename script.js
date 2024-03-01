@@ -24,13 +24,13 @@ window.addEventListener("DOMContentLoaded", () => {
         return 1;
     }
     function updateContainer(container, oldTime, newTime) {
-        if(oldTime == newTime) return;
+        if(!first && oldTime == newTime) return;
 
         var oldTime = ("00" + oldTime).slice(-2);
         var newTime = ("00" + newTime).slice(-2);
 
         for(var i = 0, l = newTime.length; i < l; i++) {
-            if(oldTime[i] != newTime[i])
+            if(first || oldTime[i] != newTime[i])
                 updateNumber(container.children[i], newTime[i]);
         }
 
