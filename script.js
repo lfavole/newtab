@@ -9,7 +9,7 @@ window.addEventListener("DOMContentLoaded", () => {
     var first = true;
 
     function updateTime() {
-        var now = new Date;
+        var now = new Date();
 
         updateContainer(secondsContainer, last.getSeconds(), now.getSeconds())
         && tick()
@@ -21,6 +21,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
     function tick() {
         clockContainer.classList.toggle("tick-hidden");
+        updateGreeting();
         return 1;
     }
     function updateContainer(container, oldTime, newTime) {
@@ -55,4 +56,55 @@ window.addEventListener("DOMContentLoaded", () => {
         }, 600);
     }
     setInterval(updateTime, 100);
+
+    function updateGreeting() {
+        var now = new Date();
+        var hour = now.getHours();
+        var message;
+        if(hour < 12) {
+            message = "Bonjour";
+        } else if(hour < 18) {
+            message = "Bonne après-midi";
+        } else {
+            message = "Bonne soirée";
+        }
+        document.querySelector(".message").textContent = message;
+    }
+    function getName() {
+        return localStorage.getItem("greetingName") || "Laurent";
+    }
+    function updateName() {
+        document.querySelector(".name").textContent = getName();
+    }
+
+    document.querySelector(".name").addEventListener("dblclick", () => {
+        var name = (prompt("Nom :", getName()) || "").trim();
+        if(!name) return;
+        localStorage.setItem("greetingName", name);
+        updateName();
+    });
+    updateName();
+
+    function getHexPart() {
+        return ("00" + Math.floor(Math.random() * 256).toString(16)).slice(-2)
+    }
+    // https://stackoverflow.com/a/24261119
+    function isColorDark(color) {
+        return 1 - (
+            0.299 * parseInt(color.substring(1, 3), 16)
+            + 0.587 * parseInt(color.substring(3, 5), 16)
+            + 0.114 * parseInt(color.substring(5, 7), 16)
+        ) / 255 < 0.5
+    }
+    function updateBackground() {
+        var color1 = "#" + getHexPart() + getHexPart() + getHexPart();
+        var color2 = "#" + getHexPart() + getHexPart() + getHexPart();
+        var angle = Math.floor(Math.random() * 360);
+        document.body.style.backgroundImage = `linear-gradient(${angle}deg, ${color1}, ${color2})`;
+        if(isColorDark(color1) || isColorDark(color2))
+            document.body.style.color = "white";
+        else
+            document.body.style.color = "black";
+    }
+    updateBackground()
 });
