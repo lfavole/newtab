@@ -9,6 +9,10 @@ body {
     margin: 0;
     display: flex;
     min-height: 100vh;
+    text-shadow: 0 0 5px currentcolor;
+}
+input, button, select {
+    cursor: pointer;
 }
 
 main {
@@ -79,4 +83,25 @@ main > * {
         opacity: 1;
         transform: translateY(-100%);
     }
+}
+
+.flashcard .answer-container {
+    display: none;
+}
+.flashcard.revealed .question-container input {
+    display: none;
+}
+.flashcard.revealed .answer-container {
+    display: block;
+}
+.flashcard input {
+    background: transparent;
+    border: 0.0625em solid currentcolor;
+    border-radius: 50%;
+    color: inherit;
+    resize: none;
+    font: inherit;
+    width: 1em;
+    height: 1em;
+    line-height: 0;
 }

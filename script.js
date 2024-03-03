@@ -101,10 +101,39 @@ window.addEventListener("DOMContentLoaded", () => {
         var color2 = "#" + getHexPart() + getHexPart() + getHexPart();
         var angle = Math.floor(Math.random() * 360);
         document.body.style.backgroundImage = `linear-gradient(${angle}deg, ${color1}, ${color2})`;
-        if(isColorDark(color1) || isColorDark(color2))
-            document.body.style.color = "white";
-        else
+        if(!isColorDark(color1) && !isColorDark(color2))
             document.body.style.color = "black";
+        else
+            document.body.style.color = "white";
     }
-    updateBackground()
+    updateBackground();
+
+    var allQuestions = getDepartementsQuestions();
+    function getRandomQuestion() {
+        return allQuestions[Math.floor(Math.random() * allQuestions.length)];
+    }
+    function getQuestion(newQuestion = false) {
+        if(!newQuestion) {
+            try {
+                return JSON.parse(localStorage.getItem("question"));
+            } catch(err) {}
+        }
+        return getRandomQuestion();
+    }
+    function updateQuestion(newQuestion = false) {
+        var question = getQuestion(newQuestion);
+
+        localStorage.setItem("question", JSON.stringify(question));
+
+        document.querySelector(".flashcard").classList.remove("revealed");
+        document.querySelector(".question").innerHTML = question[0];
+    }
+    document.querySelector(".question-container input").addEventListener("click", () => {
+        document.querySelector(".answer").innerHTML = getQuestion()[1];
+        document.querySelector(".flashcard").classList.add("revealed");
+    });
+    document.querySelector(".answer-container input").addEventListener("click", () => {
+        updateQuestion(true);
+    });
+    updateQuestion();
 });
