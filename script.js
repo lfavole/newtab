@@ -78,7 +78,9 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     document.querySelector(".name").addEventListener("dblclick", () => {
-        var name = (prompt("Nom :", getName()) || "").trim();
+        var name = prompt("Nom :", getName());
+        if(name == null) return;
+        name = (name || "").trim();
         localStorage.setItem("greetingName", name);
         updateName();
     });
@@ -183,7 +185,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
     document.querySelector(".photo-credits").addEventListener("dblclick", function() {
         var clientID = localStorage.getItem("unsplashClientID") || "";
-        clientID = (prompt("ID client Unsplash :", clientID) || "").trim();
+        clientID = prompt("ID client Unsplash :", clientID);
+        if(clientID == null) return;
+        clientID = (clientID || "").trim();
         localStorage.setItem("unsplashClientID", clientID);
         if(clientID)
             updatePicture();
