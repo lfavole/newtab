@@ -9,7 +9,6 @@ body {
     margin: 0;
     display: flex;
     min-height: 100vh;
-    text-shadow: 0 0 5px currentcolor;
 }
 input, button, select {
     cursor: pointer;
@@ -104,4 +103,36 @@ main > * {
     width: 1em;
     height: 1em;
     line-height: 0;
+}
+
+.photo {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: -1;
+    margin: 0;
+    background-position: center;
+    background-size: cover;
+    opacity: 0.8;
+}
+.photo-credits {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    padding: 0.25em 0.5em;
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.5em;
+    color: black;
+    background-color: white;
+    border-top-right-radius: 0.25em;
+    transition: opacity 0.4s;
+}
+.photo-credits:empty {
+    opacity: 0;
+}
+.photo-credits a {
+    color: inherit;
 }
