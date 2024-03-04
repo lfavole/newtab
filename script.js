@@ -111,7 +111,7 @@ window.addEventListener("DOMContentLoaded", () => {
         var color1 = "#" + getHexPart() + getHexPart() + getHexPart();
         var color2 = "#" + getHexPart() + getHexPart() + getHexPart();
         var angle = Math.floor(Math.random() * 360);
-        document.body.style.backgroundImage = `linear-gradient(${angle}deg, ${color1}, ${color2})`;
+        document.querySelector(".photo").style.backgroundImage = `linear-gradient(${angle}deg, ${color1}, ${color2})`;
         if(!isColorDark(color1) && !isColorDark(color2))
             document.body.style.color = "black";
         else
@@ -158,7 +158,6 @@ window.addEventListener("DOMContentLoaded", () => {
     updateQuestion();
 
     function updatePicture() {
-        deleteImageMetadata();
         var clientID = localStorage.getItem("unsplashClientID");
         if(!clientID) return;
         fetch(
@@ -171,6 +170,7 @@ window.addEventListener("DOMContentLoaded", () => {
         )
         .then(resp => resp.json())
         .then((data) => {
+            deleteImageMetadata();
             document.querySelector(".photo").style.backgroundImage = `url(${data.urls.raw}${data.urls.raw.includes("?") ? "&" : "?"}w=${innerWidth}&h=${innerHeight}&fit=crop&auto=compress,format)`;
             document.querySelector(".photo-credits").innerHTML = (
                 `<a href="${data.links.html}?utm_source=lfnewtab&utm_medium=referral">Photo</a> `
