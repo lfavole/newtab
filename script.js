@@ -132,7 +132,8 @@ window.addEventListener("DOMContentLoaded", () => {
     function getQuestion(newQuestion = false) {
         if(!newQuestion) {
             try {
-                return JSON.parse(localStorage.getItem("question"));
+                var question = localStorage.getItem("question");
+                if(question) return JSON.parse(question);
             } catch(err) {}
         }
         return getRandomQuestion();
