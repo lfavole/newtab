@@ -88,7 +88,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
     function deleteImageMetadata() {
         document.body.style.backgroundImage = null;
+        document.querySelector(".photo").src = null;
         document.querySelector(".photo").style.backgroundImage = null;
+        document.querySelector(".photo").classList.remove("loaded");
         document.querySelector(".photo-credits").innerHTML = "";
     }
 
@@ -112,6 +114,7 @@ window.addEventListener("DOMContentLoaded", () => {
         var color2 = "#" + getHexPart() + getHexPart() + getHexPart();
         var angle = Math.floor(Math.random() * 360);
         document.querySelector(".photo").style.backgroundImage = `linear-gradient(${angle}deg, ${color1}, ${color2})`;
+        document.querySelector(".photo").classList.add("loaded");
         if(!isColorDark(color1) && !isColorDark(color2))
             document.body.style.color = "black";
         else
@@ -169,9 +172,8 @@ window.addEventListener("DOMContentLoaded", () => {
             },
         )
         .then(resp => resp.json())
-        .then((data) => {
+        .then(data => {
             deleteImageMetadata();
-            document.querySelector(".photo").style.backgroundImage = `url(${data.urls.raw}${data.urls.raw.includes("?") ? "&" : "?"}w=${innerWidth}&h=${innerHeight}&fit=crop&auto=compress,format)`;
             document.querySelector(".photo-credits").innerHTML = (
                 `<a href="${data.links.html}?utm_source=lfnewtab&utm_medium=referral">Photo</a> `
                 + `par <a href="${data.user.links.html}?utm_source=lfnewtab&utm_medium=referral">${data.user.name}</a> `
@@ -179,6 +181,15 @@ window.addEventListener("DOMContentLoaded", () => {
             );
             document.body.style.backgroundImage = `url(${blurhashToURL(data.blur_hash, innerWidth, innerHeight)})`;
             updateTextColor(data.blur_hash);
+
+            var imageURL = `${data.urls.raw}${data.urls.raw.includes("?") ? "&" : "?"}w=${innerWidth}&h=${innerHeight}&fit=crop&auto=compress,format`;
+            fetch(imageURL)
+            .then(resp => resp.blob())
+            .then(blob => {
+                var url = URL.createObjectURL(blob);
+                document.querySelector(".photo").style.backgroundImage = `url(${url})`;
+                document.querySelector(".photo").classList.add("loaded");
+            });
         });
     }
     updatePicture();

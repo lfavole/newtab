@@ -111,11 +111,17 @@ main > * {
     right: 0;
     top: 0;
     bottom: 0;
+    width: 100vw;
+    height: 100vh;
     z-index: -1;
     margin: 0;
     background-position: center;
     background-size: cover;
     opacity: 0.8;
+    transition: opacity 1s ease-in-out;
+}
+.photo:not(.loaded) {
+    opacity: 0;
 }
 .photo-credits {
     position: absolute;
