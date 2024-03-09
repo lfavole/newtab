@@ -2,7 +2,16 @@ var VERSION = "dev";
 
 self.addEventListener("install", evt => {
 	async function init() {
+		var keys = await caches.keys();
+		for(var key, i = 0, l = keys.length; i < l; i++) {
+			key = keys[i];
+			if(key == VERSION || key == "pictures") continue;
+			console.log(`Deleting cache ${key}`);
+			caches.delete(key);
+		}
+		console.log(`Opening ${VERSION} cache`);
 		await caches.open(VERSION);
+		console.log("Opening pictures cache");
 		await caches.open("pictures");
 	}
 	evt.waitUntil(init());
@@ -13,23 +22,41 @@ function isPictureResponse(response) {
 }
 
 self.addEventListener("fetch", async evt => {
+	async function fetchFromCache(request) {
+		ret = await caches.match(request);
+		console.log(`Fetching ${request.url} from cache${ret ? "" : ", does not exist"}`);
+		return ret;
+	}
 	async function getResponse(evt) {
+		var request = evt.request;
+		if(VERSION != "dev") {
+			var cachedResponse = await fetchFromCache(request);
+			if(cachedResponse) return cachedResponse;
+		}
 		try {
-			var response = await fetch(evt.request);
+			var response = await fetch(request);
 
-			if(VERSION == "dev" && response.url.startsWith(registration.scope) || response.url.match(/\bapi\b/)) {
-				// don't cache assets during development
-				// or API requests
-			} else {
-				console.log(`Storing ${response.url}`);
-				var cache = await caches.open(isPictureResponse(response) ? "pictures" : VERSION);
-				await cache.put(response.clone());
-			}
+			var clonedResponse = response.clone();
+
+			evt.waitUntil(
+				caches.open(isPictureResponse(response) ? "pictures" : VERSION)
+				.then(cache => {
+					console.log(`Storing ${response.url}`);
+					return cache.put(request, clonedResponse);
+				})
+				.catch(console.error)
+			);
 
 			return response;
 		} catch(err) {
-			return caches.match(evt.request);
+			if(VERSION == "dev") {
+				var cachedResponse = await fetchFromCache(request);
+				if(cachedResponse)
+					return cachedResponse;
+				else
+					throw err;
+			}
 		}
 	}
-	evt.respondWith(await getResponse(evt));
+	evt.respondWith(getResponse(evt));
 });

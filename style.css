@@ -133,6 +133,7 @@ main > * {
     line-height: 1.5em;
     color: black;
     background-color: white;
+    text-shadow: none;
     border-top-right-radius: 0.25em;
     transition: opacity 0.4s;
 }
@@ -141,4 +142,30 @@ main > * {
 }
 .photo-credits a {
     color: inherit;
+}
+
+.photo-controls {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    margin-bottom: 1em;
+}
+.photo-controls div {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    cursor: pointer;
+}
+.photo-controls div:nth-child(2), .photo-controls div:nth-last-child(2) {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.photo-controls div:nth-child(2) {
+    bottom: 1em;
+}
+.photo-controls div:nth-last-child(2) {
+    bottom: -1em;
 }
