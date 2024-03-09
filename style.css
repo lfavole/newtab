@@ -103,6 +103,7 @@ main > * {
     width: 1em;
     height: 1em;
     line-height: 0;
+    margin-left: 0.3em;
 }
 
 .photo {
@@ -150,22 +151,42 @@ main > * {
     right: 0;
     bottom: 0;
     margin: 0;
-    margin-bottom: 1em;
 }
-.photo-controls div {
-    display: inline-block;
+.photo-controls input {
+    display: block;
+    font: inherit;
+    color: inherit;
     width: 1em;
     height: 1em;
+    text-align: center;
+    padding: 0;
+    border: 0;
+    background-color: transparent;
     cursor: pointer;
-}
-.photo-controls div:nth-child(2), .photo-controls div:nth-last-child(2) {
     position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
 }
-.photo-controls div:nth-child(2) {
+/* left */
+.photo-controls input:nth-child(1) {
     bottom: 1em;
+    left: calc(50% - 1.5em);
 }
-.photo-controls div:nth-last-child(2) {
-    bottom: -1em;
+/* top */
+.photo-controls input:nth-child(2) {
+    bottom: 2em;
+    left: calc(50% - 0.5em);
+}
+/* pause */
+.photo-controls input:nth-child(3) {
+    bottom: 1em;
+    left: calc(50% - 0.5em);
+}
+/* bottom */
+.photo-controls input:nth-child(4) {
+    bottom: 0;
+    left: calc(50% - 0.5em);
+}
+/* right */
+.photo-controls input:nth-child(5) {
+    bottom: 1em;
+    left: calc(50% + 0.5em);
 }

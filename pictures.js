@@ -10,25 +10,19 @@ modules.pictures = function() {
     var controlsContainer = document.createElement("div");
     controlsContainer.className = "photo-controls";
 
-    var left = document.createElement("div");
-    left.textContent = "←";
-    controlsContainer.appendChild(left);
+    function createButton(text) {
+        var button = document.createElement("input");
+        button.type = "button";
+        button.value = text;
+        controlsContainer.appendChild(button);
+        return button;
+    }
 
-    var top = document.createElement("div");
-    top.textContent = "↑";
-    controlsContainer.appendChild(top);
-
-    var pause = document.createElement("div");
-    pause.textContent = "⏸︎";
-    controlsContainer.appendChild(pause);
-
-    var bottom = document.createElement("div");
-    bottom.textContent = "↓";
-    controlsContainer.appendChild(bottom);
-
-    var right = document.createElement("div");
-    right.textContent = "→";
-    controlsContainer.appendChild(right);
+    var left = createButton("←");
+    var top = createButton("↑");
+    var pause = createButton("⏸︎");
+    var bottom = createButton("↓");
+    var right = createButton("→");
 
     document.querySelector("main").appendChild(controlsContainer);
 
@@ -64,7 +58,6 @@ modules.pictures = function() {
     var platforms = ["unsplash"];
 
     var currentPicture;
-    var currentPictureIsRandom;
     function Picture(url, pageURL, userLink, username, platform, blurhash) {
         if(!(this instanceof Picture))
             throw Error("Picture objects must be instantiated with the 'new' operator.");
@@ -96,21 +89,23 @@ modules.pictures = function() {
             array[6] || "",
         );
     };
-    Picture.update = async function() {
+    Picture.update = async function(next = true) {
         // get the next pictures (the next API result) for each provider
         var nextPictures = [];
         for(var pictureIndex, picture, i = 0, l = platforms.length; i < l; i++) {
             pictureIndex = Picture.getIndex(platforms[i]);
-            picture = await Picture.get(platforms[i], pictureIndex, false);
+            picture = await Picture.get(platforms[i], pictureIndex + (next ? 1 : 0), false);
             if(picture)
                 nextPictures.push(picture);
         }
 
         var picture;
         if(nextPictures.length) {
-            // take one of the next pictures
+            // take one of the next pictures and display it
             picture = nextPictures[Math.floor(Math.random() * nextPictures.length)];
             await picture.display();
+            if(next)
+                Picture.next(picture.platform);
         } else {
             // display a random image from one platform while the real picture is loading
             random = true;
@@ -138,7 +133,8 @@ modules.pictures = function() {
             if(pictures) {
                 var picture = pictures[Math.floor(Math.random() * pictures.length)];
                 await picture.display();
-                Picture.next(picture.platform);
+                if(next)
+                    Picture.next(picture.platform);
                 return;
             }
 
@@ -209,7 +205,7 @@ modules.pictures = function() {
         var platform = platform || "other";
         var index = Picture.getIndex(platform) + step;
         var pictures = Picture.getList(platform);
-        localStorage.setItem("picturesIndex--" + platform, index >= 0 ? index : pictures.length + index);
+        localStorage.setItem("picturesIndex--" + platform, (index >= 0 ? index : pictures.length + index) % pictures.length);
     };
     Picture.prototype.add = function() {
         var pictures = localStorage.getItem("picturesList--" + (this.platform || "other"));
@@ -254,7 +250,6 @@ modules.pictures = function() {
     };
     Picture.prototype.display = async function(random = false) {
         currentPicture = this;
-        currentPictureIsRandom = random;
         deleteImageMetadata();
         creditsContainer.innerHTML = this.getCredits();
 
@@ -329,10 +324,18 @@ modules.pictures = function() {
         );
     };
 
+    function getPause() {
+        return +localStorage.getItem("picturesPaused");
+    }
+    function updatePause() {
+        pause.value = getPause() ? "▶" : "⏸️";
+    }
+
     setTimeout(async () => {
         await (await Picture.fetch("gradient")).display();
-        await Picture.update();
+        await Picture.update(!getPause());
     }, 0);
+    updatePause();
 
     creditsContainer.addEventListener("dblclick", function() {
         var clientID = localStorage.getItem("unsplashClientID") || "";
@@ -347,7 +350,6 @@ modules.pictures = function() {
     });
 
     async function move(step) {
-        // if(currentPictureIsRandom) return;
         var picture = await Picture.get(currentPicture.platform, Picture.getIndex(currentPicture.platform) + step, 2);
         // go next before the picture is displayed so we can skip pictures
         // if an error occurs while fetching
@@ -357,4 +359,9 @@ modules.pictures = function() {
 
     left.addEventListener("click", async () => move(-1));
     right.addEventListener("click", async () => move(1));
+
+    pause.addEventListener("click", () => {
+        localStorage.setItem("picturesPaused", +!getPause());
+        updatePause();
+    });
 };
