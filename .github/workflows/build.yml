@@ -1,0 +1,52 @@
+name: Build the new tab page
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    name: Build the new tab page
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Add version in service worker
+        run: |
+          import subprocess as sp
+          from pathlib import Path
+
+          tag_or_commit = sp.check_output(["git", "describe", "HEAD", "--always"], text=True).rstrip("\n")
+
+          sw = Path("newtab/sw.js")
+          data = sw.read_text()
+          data = data.replace("dev", tag_or_commit, 1)
+          sw.write_text(data)
+        shell: python
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: newtab/
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
