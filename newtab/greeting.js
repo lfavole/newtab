@@ -1,3 +1,4 @@
+window.modules = window.modules || {};
 modules.greeting = () => {
     var greetingContainer = document.createElement("div");
     greetingContainer.className = "greeting";

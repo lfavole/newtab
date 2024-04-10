@@ -1,0 +1,86 @@
+name: Publish on addons.mozilla.org
+
+on:
+  push:
+    tags: ["*"]
+
+jobs:
+  build:
+    name: Build the new tab page
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache npm packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node
+
+      - name: Add version in service worker
+        run: |
+          import subprocess as sp
+          from pathlib import Path
+
+          tag_or_commit = sp.check_output(["git", "describe", "HEAD", "--always"], text=True).rstrip("\n")
+
+          sw = Path("newtab/sw.js")
+          data = sw.read_text()
+          data = data.replace("dev", tag_or_commit, 1)
+          sw.write_text(data)
+        shell: python
+
+      - name: Install web-ext
+        run: npm install --global web-ext
+
+      - name: Build the extension
+        run: |
+          cd newtab
+          web-ext build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: newtab/web-ext-artifacts/**
+
+  deploy:
+    name: Deploy to addons.mozilla.org
+    needs: build
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: production
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache npm packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node
+
+      - name: Install web-ext
+        run: npm install --global web-ext
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+          path: dist
+
+      - name: Publish the extension
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        run: |
+          cd newtab
+          web-ext sign --use-submission-api --channel listed --api-key $AMO_JWT_ISSUER --api-secret $AMO_JWT_SECRET

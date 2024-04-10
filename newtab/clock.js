@@ -1,3 +1,4 @@
+window.modules = window.modules || {};
 modules.clock = () => {
     var clockContainer = document.createElement("div");
     clockContainer.className = "clock";

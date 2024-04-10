@@ -1,3 +1,4 @@
+window.modules = window.modules || {};
 modules.flashcards = function() {
     var flashcardContainer = document.createElement("div");
     flashcardContainer.className = "flashcard";
