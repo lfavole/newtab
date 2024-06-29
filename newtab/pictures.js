@@ -159,14 +159,16 @@ modules.pictures = function() {
         }
         if(platform == "unsplash") {
             var clientID = localStorage.getItem("unsplashClientID");
-            if(!clientID) return;
+            var endpoint = "https://api.unsplash.com/photos/random?count=10";
+            if(!clientID || location.protocol.includes("extension"))
+                endpoint = "https://lfnewtab.vercel.app/unsplash/photos/random?count=10";
             try {
                 var resp = await fetch(
-                    "https://api.unsplash.com/photos/random?count=10",
+                    endpoint,
                     {
-                        "headers": {
+                        "headers": clientID ? {
                             "Authorization": "Client-ID " + clientID,
-                        },
+                        } : {},
                     },
                 )
                 var data = await resp.json();
