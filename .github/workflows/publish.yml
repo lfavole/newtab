@@ -83,4 +83,4 @@ jobs:
           AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
         run: |
           cd newtab
-          web-ext sign --use-submission-api --channel listed --api-key $AMO_JWT_ISSUER --api-secret $AMO_JWT_SECRET
+          web-ext sign --channel listed --api-key $AMO_JWT_ISSUER --api-secret $AMO_JWT_SECRET
