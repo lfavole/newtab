@@ -174,6 +174,7 @@ modules.pictures = function() {
             var url = URL.createObjectURL(blob);
             pictureContainer.style.backgroundImage = `url(${url})`;
             pictureContainer.classList.add("loaded");
+            document.body.style.backgroundImage = "";
             if(blurhashCallback)
                 window.removeEventListener("resize", blurhashCallback);
         }
