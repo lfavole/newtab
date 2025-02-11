@@ -23,7 +23,7 @@ function isPictureResponse(response) {
 
 self.addEventListener("fetch", async evt => {
 	async function fetchFromCache(request) {
-		ret = await caches.match(request);
+		var ret = await caches.match(request);
 		console.log(`Fetching ${request.url} from cache${ret ? "" : ", does not exist"}`);
 		return ret;
 	}
