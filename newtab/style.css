@@ -106,6 +106,70 @@ main > * {
     margin-left: 0.3em;
 }
 
+.quote-container {
+    display: flex;
+    flex-direction: column;
+}
+.quote {
+    font-size: 0.5em;
+    line-height: 1.5em;
+    text-align: center;
+    max-width: 50vw;
+    margin: auto;
+}
+.quote:not(:empty)::before {
+    content: "« ";
+}
+.quote:not(:empty)::after {
+    content: " »";
+}
+.author {
+    font-size: 0.75em;
+    line-height: 1.5em;
+    text-align: center;
+    max-width: 30vw;
+    margin: auto;
+}
+.author:not(:empty)::before {
+    content: "— ";
+}
+.quote-changer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+}
+.quote-changer button {
+    display: block;
+    font: inherit;
+    color: inherit;
+    width: 1em;
+    height: 1em;
+    text-align: center;
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    cursor: pointer;
+}
+.quote-changer button:first-child {
+    margin-right: 0.5em;
+}
+.quote-changer button:last-child {
+    margin-left: 0.5em;
+}
+.quote-changer button:nth-child(3) {
+    position: absolute;
+    left: calc(50% - 0.5em);
+    top: 0;
+}
+.progress-bar {
+    margin-right: auto;
+    height: 0.2em;
+    background-color: #fff;
+    transition: width 0.4s ease-in-out;
+    border-radius: 0.1em;
+}
+
 .photo {
     position: absolute;
     left: 0;
