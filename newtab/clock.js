@@ -75,5 +75,10 @@ modules.clock = () => {
             element.classList.remove("move");
         }, 600);
     }
-    setInterval(updateTime, 100);
+    var intv = setInterval(updateTime, 100);
+
+    return function() {
+        clearInterval(intv);
+        clockContainer.remove();
+    };
 };

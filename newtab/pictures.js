@@ -68,18 +68,11 @@ modules.pictures = function() {
         static get platforms() {
             return ["unsplash"];
         }
+        static get automaticPlatforms() {
+            return ["gradient"];
+        }
         static get fallbackPlatform() {
             return "gradient";
-        }
-        getArray() {
-            return [
-                this.url || "",
-                this.pageURL || "",
-                this.userLink || "",
-                this.username || "",
-                this.platform || "",
-                this.blurhash || "",
-            ];
         }
         static async fetch(platform) {
             if(platform == "gradient") {
@@ -231,4 +224,8 @@ modules.pictures = function() {
         Picture.setPaused();
         updatePause();
     });
+
+    return function() {
+        pictureContainer.remove();
+    };
 };

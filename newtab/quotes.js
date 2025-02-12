@@ -116,4 +116,9 @@ modules.quotes = () => {
         Quote.setPaused();
         updatePause();
     });
+
+    return function() {
+        clearInterval(nextIntv);
+        quotesContainer.remove();
+    };
 };

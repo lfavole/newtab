@@ -9,7 +9,5 @@ window.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    for(var mod in modules) {
-        modules[mod]();
-    }
+    modules.settings();
 });

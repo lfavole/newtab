@@ -65,4 +65,8 @@ modules.flashcards = function() {
         updateQuestion(true);
     });
     updateQuestion();
+
+    return function() {
+        flashcardContainer.remove();
+    };
 };
