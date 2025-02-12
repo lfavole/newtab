@@ -5,6 +5,7 @@ function getRandomItem(list) {
 /**
  * A class that can fetch items from multiple platforms.
  * The class must be extended and the fetch method must be implemented.
+ * It must have a platform attribute.
  */
 class Gettable {
     constructor() {
@@ -27,6 +28,12 @@ class Gettable {
         return null;
     }
     /**
+     * Returns the platforms that are automatic, e.g. that don't need to be stored.
+     */
+    static get automaticPlatforms() {
+        return [];
+    }
+    /**
      * Returns the key to use in the local storage.
      * This key should be unique to the class.
      * By default, it is the class name.
@@ -35,17 +42,8 @@ class Gettable {
         return this.name.toLowerCase() + "s";
     }
     /**
-     * Returns the array representation of the item to store in the local storage.
+     * Go ahead/behind from a given step, downloading and displaying the new item if necessary.
      */
-    getArray() {
-        throw Error("getArray method not implemented.");
-    }
-    /**
-     * Instantiates an item from an array.
-     */
-    static fromArray(array) {
-        return new this(...array);
-    }
     static async update(step = 1) {
         // get the next items for each platform
         var nextItems = (
@@ -113,15 +111,17 @@ class Gettable {
     }
     static async setIndex(platform, index) {
         var items = this.getList(platform);
+        if(!items.length) return;
         localStorage.setItem(`${this.key}Index--${platform}`, (index >= 0 ? index : items.length + index) % items.length);
     }
     /**
      * Adds the current item to the list corresponding to its platform.
      */
     add() {
+        if(this.constructor.automaticPlatforms.includes(this.platform)) return;
         var items = this.constructor.getList(this.platform);
-        items.push(this.getArray());
-        localStorage.setItem(`${this.key}List--${this.platform}`, JSON.stringify(items));
+        items.push(this);
+        localStorage.setItem(`${this.constructor.key}List--${this.platform}`, JSON.stringify(items));
     }
     /**
      * Returns the previously fetched items for a platform.
@@ -134,7 +134,7 @@ class Gettable {
         } catch(err) {
             return [];
         }
-        return data.map(item => this.fromArray(item));
+        return data.map(item => new this(item));
     }
     /**
      * Returns the item corresponding to the index for a platform, downloading it if specified.

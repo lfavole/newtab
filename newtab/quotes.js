@@ -37,8 +37,9 @@ modules.quotes = () => {
     quoteChangerElement.appendChild(nextButton);
 
     class Quote extends Gettable {
-        constructor(quote, author, book) {
+        constructor(platform, quote, author, book) {
             super();
+            this.platform = platform;
             this.quote = quote;
             this.author = author;
             this.book = book;
@@ -49,9 +50,6 @@ modules.quotes = () => {
                 "fr/cats",
                 "it/general",
             ];
-        }
-        getArray() {
-            return [this.quote, this.author, this.book];
         }
         static async getRepositoryInfo(repository) {
             var resp = await fetch("https://lfavole.github.io/quotes/" + repository + "/0.json");
@@ -77,7 +75,7 @@ modules.quotes = () => {
             var chunkIndex = Math.floor(quoteIndex / info.chunk_size) + 1;
             var resp = await fetch("https://lfavole.github.io/quotes/" + repository + "/" + chunkIndex + ".json");
             var data = await resp.json();
-            return [this.fromArray(data[quoteIndex % info.chunk_size])];
+            return [new this(repository, ...data[quoteIndex % info.chunk_size])];
         }
         display() {
             quoteElement.textContent = this.quote;
