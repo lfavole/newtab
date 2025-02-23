@@ -43,5 +43,11 @@ modules.greeting = () => {
     });
     updateName();
 
-    setTimeout(updateGreeting, 100);
+    var intv = setInterval(updateGreeting, 1000);
+    updateGreeting();
+
+    return function() {
+        clearInterval(intv);
+        greetingContainer.remove();
+    };
 };

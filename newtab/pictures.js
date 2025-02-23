@@ -56,14 +56,14 @@ modules.pictures = function() {
     }
 
     class Picture extends Gettable {
-        constructor(url, pageURL, userLink, username, platform, blurhash) {
+        constructor({ url, pageURL, userLink, username, platform, blurhash }) {
             super();
-            this.url = url;
-            this.pageURL = pageURL;
-            this.userLink = userLink;
-            this.username = username;
-            this.platform = platform;
-            this.blurhash = blurhash;
+            this.url = url || "";
+            this.pageURL = pageURL || "";
+            this.userLink = userLink || "";
+            this.username = username || "";
+            this.platform = platform || "";
+            this.blurhash = blurhash || "";
         }
         static get platforms() {
             return ["unsplash"];
@@ -79,7 +79,7 @@ modules.pictures = function() {
                 var color1 = "#" + getHexPart() + getHexPart() + getHexPart();
                 var color2 = "#" + getHexPart() + getHexPart() + getHexPart();
                 var angle = Math.floor(Math.random() * 360);
-                return [new Picture(`linear-gradient(${angle}deg, ${color1}, ${color2})`, "", "", "", "gradient")];
+                return [new Picture({url: `linear-gradient(${angle}deg, ${color1}, ${color2})`, platform: "gradient"})];
             }
             if(platform == "unsplash") {
                 var clientID = localStorage.getItem("unsplashClientID");
@@ -97,14 +97,14 @@ modules.pictures = function() {
                     )
                     var data = await resp.json();
                     var pictures = data.map(item => {
-                        var picture = new this(
-                            item.urls.raw,
-                            item.links.html,
-                            item.user.links.html,
-                            item.user.name,
-                            "unsplash",
-                            item.blur_hash,
-                        );
+                        var picture = new this({
+                            url: item.urls.raw,
+                            pageURL: item.links.html,
+                            userLink: item.user.links.html,
+                            username: item.user.name,
+                            platform: "unsplash",
+                            blurhash: item.blur_hash,
+                        });
 
                         fetch(picture.getCompressedURL())
                         .catch(err => console.error("Couldn't prefetch picture:", err))
@@ -227,5 +227,7 @@ modules.pictures = function() {
 
     return function() {
         pictureContainer.remove();
+        creditsContainer.remove();
+        controlsContainer.remove();
     };
 };
