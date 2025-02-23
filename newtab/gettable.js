@@ -185,4 +185,56 @@ class Gettable {
     static async updateInitial() {
         await this.update(this.paused ? 0 : 1);
     }
+    /**
+     *
+     */
+    static getControls(controlsContainer) {
+        function createButton(text) {
+            var button = document.createElement("input");
+            button.type = "button";
+            button.value = text;
+            controlsContainer.appendChild(button);
+            return button;
+        }
+
+        var left = createButton("←");
+        var pause = createButton("⏸︎");
+        var right = createButton("→");
+
+        var progressBar = document.createElement("div");
+        progressBar.className = "progress-bar";
+        controlsContainer.appendChild(progressBar);
+
+        var counterMax = 60000;
+        var counter = counterMax;
+
+        var nextIntv = setInterval(() => {
+            if(!this.paused) {
+                counter -= 500;
+                progressBar.style.setProperty("--width", (counter / counterMax) * 100 + "%");
+                if(counter == 0) {
+                    counter = counterMax;
+                    this.update();
+                }
+            } else {
+                clearInterval(nextIntv);
+                counter = counterMax;
+                progressBar.style.setProperty("--width", "100%");
+            }
+        }, 500);
+        var updatePause = () => {
+            pause.value = this.paused ? "▶" : "⏸️";
+        }
+
+        left.addEventListener("click", async () => await this.update(-1));
+        right.addEventListener("click", async () => await this.update(1));
+
+        pause.addEventListener("click", () => {
+            this.setPaused();
+            updatePause();
+        });
+        updatePause();
+
+        return [left, pause, right, nextIntv];
+    }
 }

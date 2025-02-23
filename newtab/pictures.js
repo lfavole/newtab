@@ -8,21 +8,7 @@ modules.pictures = function() {
     document.querySelector("main").appendChild(creditsContainer);
 
     var controlsContainer = document.createElement("div");
-    controlsContainer.className = "photo-controls";
-
-    function createButton(text) {
-        var button = document.createElement("input");
-        button.type = "button";
-        button.value = text;
-        controlsContainer.appendChild(button);
-        return button;
-    }
-
-    var left = createButton("←");
-    var top = createButton("↑");
-    var pause = createButton("⏸︎");
-    var bottom = createButton("↓");
-    var right = createButton("→");
+    controlsContainer.className = "controls photo-controls";
 
     document.querySelector("main").appendChild(controlsContainer);
 
@@ -201,12 +187,9 @@ modules.pictures = function() {
         }
     }
 
-    function updatePause() {
-        pause.value = Picture.paused ? "▶" : "⏸️";
-    }
+    var [_, _, _, nextIntv] = Picture.getControls(controlsContainer);
 
     setTimeout(async () => await Picture.updateInitial(), 0);
-    updatePause();
 
     creditsContainer.addEventListener("dblclick", function() {
         var clientID = localStorage.getItem("unsplashClientID") || "";
@@ -217,15 +200,8 @@ modules.pictures = function() {
         Picture.update();
     });
 
-    left.addEventListener("click", async () => await Picture.update(-1));
-    right.addEventListener("click", async () => await Picture.update(1));
-
-    pause.addEventListener("click", () => {
-        Picture.setPaused();
-        updatePause();
-    });
-
     return function() {
+        clearInterval(nextIntv);
         pictureContainer.remove();
         creditsContainer.remove();
         controlsContainer.remove();

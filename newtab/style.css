@@ -149,41 +149,35 @@ main > * {
 .author:not(:empty)::before {
     content: "— ";
 }
-.quote-changer {
+.controls {
     display: flex;
     align-items: center;
     justify-content: space-between;
     position: relative;
 }
-.quote-changer button {
+.controls input {
     display: block;
     font: inherit;
     color: inherit;
     width: 1em;
     height: 1em;
     text-align: center;
-    padding: 0;
     border: 0;
+    padding: 0;
     background-color: transparent;
     cursor: pointer;
-}
-.quote-changer button:first-child {
-    margin-right: 0.5em;
-}
-.quote-changer button:last-child {
-    margin-left: 0.5em;
-}
-.quote-changer button:nth-child(3) {
-    position: absolute;
-    left: calc(50% - 0.5em);
-    top: 0;
+    z-index: 2;
 }
 .progress-bar {
-    margin-right: auto;
+    position: absolute;
+    left: 1em;
+    top: calc(50% - 0.1em);
+    width: calc(var(--width) - 2em);
     height: 0.2em;
     background-color: #fff;
     transition: width 0.4s ease-in-out;
     border-radius: 0.1em;
+    z-index: 1;
 }
 
 .photo {
@@ -223,50 +217,4 @@ main > * {
 }
 .photo-credits a {
     color: inherit;
-}
-
-.photo-controls {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    margin: 0;
-}
-.photo-controls input {
-    display: block;
-    font: inherit;
-    color: inherit;
-    width: 1em;
-    height: 1em;
-    text-align: center;
-    padding: 0;
-    border: 0;
-    background-color: transparent;
-    cursor: pointer;
-    position: absolute;
-}
-/* left */
-.photo-controls input:nth-child(1) {
-    bottom: 1em;
-    left: calc(50% - 1.5em);
-}
-/* top */
-.photo-controls input:nth-child(2) {
-    bottom: 2em;
-    left: calc(50% - 0.5em);
-}
-/* pause */
-.photo-controls input:nth-child(3) {
-    bottom: 1em;
-    left: calc(50% - 0.5em);
-}
-/* bottom */
-.photo-controls input:nth-child(4) {
-    bottom: 0;
-    left: calc(50% - 0.5em);
-}
-/* right */
-.photo-controls input:nth-child(5) {
-    bottom: 1em;
-    left: calc(50% + 0.5em);
 }
