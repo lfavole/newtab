@@ -1,5 +1,5 @@
 window.modules = window.modules || {};
-modules.clock = () => {
+modules.clock = async () => {
     var clockContainer = document.createElement("div");
     clockContainer.className = "clock";
     document.querySelector("main").appendChild(clockContainer);

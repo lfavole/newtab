@@ -1,5 +1,5 @@
 window.modules = window.modules || {};
-modules.settings = () => {
+modules.settings = async () => {
     var settingsContainer = document.createElement("details");
     settingsContainer.className = "settings-container";
     document.querySelector("main").appendChild(settingsContainer);
@@ -14,21 +14,21 @@ modules.settings = () => {
 
     var deactivators = {};
 
-    function getEnabledModules() {
-        var enabledModules = (localStorage.getItem("modules") || "").split(",").filter(mod => existingModules.includes(mod));
+    async function getEnabledModules() {
+        var enabledModules = ((await browser.storage.local.get())?.modules || localStorage.getItem("modules") || "").split(",").filter(mod => existingModules.includes(mod));
         return enabledModules.length ? enabledModules : defaultModules;
     }
 
-    function updateEnabledModules() {
+    async function updateEnabledModules() {
         var enabledModules = [];
         for(var i = 0, l = modulesList.length; i < l; i++) {
             if(modulesChecked[i])
                 enabledModules.push(modulesList[i]);
         }
         if(enabledModules.length == defaultModules.length && enabledModules.every((val, index) => val == defaultModules[index]))
-            localStorage.setItem("modules", "");
+            await browser.storage.local.set({modules: ""});
         else
-            localStorage.setItem("modules", enabledModules);
+            await browser.storage.local.set({modules: enabledModules.join(",")});
         Object.values(deactivators).forEach(deactivate => deactivate());
         deactivators = {};
         for(var module of enabledModules) {
@@ -36,7 +36,7 @@ modules.settings = () => {
         }
     }
 
-    function check({target}) {
+    async function check({target}) {
         var itemIndex;
         var list = modulesContainer.children;
         for(var i = 0; i < list.length; i += 1) {
@@ -46,14 +46,14 @@ modules.settings = () => {
             }
         }
         modulesChecked[itemIndex] = target.checked;
-        updateEnabledModules();
+        await updateEnabledModules();
     }
 
     var defaultModules = ["clock", "greeting", "quotes", "pictures"];
     var existingModules = Object.keys(modules);
     existingModules.splice(existingModules.indexOf("settings"), 1);
 
-    var modulesList = getEnabledModules();
+    var modulesList = await getEnabledModules();
     // the first modules are always enabled
     var modulesChecked = Array(modulesList.length).fill(true).concat(Array(existingModules.length - modulesList.length).fill(false));
     for(var mod of existingModules) {
@@ -97,7 +97,7 @@ modules.settings = () => {
         event.preventDefault();
     });
 
-    modulesContainer.addEventListener("drop", ({target}) => {
+    modulesContainer.addEventListener("drop", async ({target}) => {
         if(target.parentElement == modulesContainer && target.dataset.id !== id) {
             var module = modulesList[index];
             var moduleChecked = modulesChecked[index];
@@ -118,9 +118,9 @@ modules.settings = () => {
             } else {
                 target.after(dragged);
             }
-            updateEnabledModules();
+            await updateEnabledModules();
         }
     });
 
-    updateEnabledModules();
+    await updateEnabledModules();
 };

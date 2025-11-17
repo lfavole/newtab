@@ -1,5 +1,5 @@
 window.modules = window.modules || {};
-modules.greeting = () => {
+modules.greeting = async () => {
     var greetingContainer = document.createElement("div");
     greetingContainer.className = "greeting";
     document.querySelector("main").appendChild(greetingContainer);
@@ -27,21 +27,21 @@ modules.greeting = () => {
 
         messageContainer.textContent = message;
     }
-    function getName() {
-        return localStorage.getItem("greetingName") || "Laurent";
+    async function getName() {
+        return (await browser.storage.local.get())?.greetingName || localStorage.getItem("greetingName") || "Laurent";
     }
-    function updateName() {
-        nameContainer.textContent = getName();
+    async function updateName() {
+        nameContainer.textContent = await getName();
     }
 
-    nameContainer.addEventListener("dblclick", () => {
-        var name = prompt("Nom :", getName());
+    nameContainer.addEventListener("dblclick", async () => {
+        var name = prompt("Nom :", await getName());
         if(name == null) return;
         name = (name || "").trim();
-        localStorage.setItem("greetingName", name);
-        updateName();
+        await browser.storage.local.set({greetingName: name});
+        await updateName();
     });
-    updateName();
+    await updateName();
 
     var intv = setInterval(updateGreeting, 1000);
     updateGreeting();

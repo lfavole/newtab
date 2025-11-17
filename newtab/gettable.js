@@ -100,34 +100,35 @@ class Gettable {
      */
     static async fetchOne(platform) {
         var items = await this.fetch(platform);
-        items.forEach(item => item.add());
+        for (var item of items)
+            await item.add();
         return items[0];
     }
     /**
      * Returns the index of the current item for a platform.
      */
     static async getIndex(platform) {
-        return +(localStorage.getItem(`${this.key}Index--${platform}`) || 0);
+        return +((await browser.storage.local.get())?.[`${this.key}Index--${platform}`] || localStorage.getItem(`${this.key}Index--${platform}`) || 0);
     }
     static async setIndex(platform, index) {
-        var items = this.getList(platform);
+        var items = await this.getList(platform);
         if(!items.length) return;
-        localStorage.setItem(`${this.key}Index--${platform}`, (index >= 0 ? index : items.length + index) % items.length);
+        await browser.storage.local.set({[`${this.key}Index--${platform}`]: (index >= 0 ? index : items.length + index) % items.length});
     }
     /**
      * Adds the current item to the list corresponding to its platform.
      */
-    add() {
+    async add() {
         if(this.constructor.automaticPlatforms.includes(this.platform)) return;
-        var items = this.constructor.getList(this.platform);
+        var items = await this.constructor.getList(this.platform);
         items.push(this);
-        localStorage.setItem(`${this.constructor.key}List--${this.platform}`, JSON.stringify(items));
+        await browser.storage.local.set({[`${this.constructor.key}List--${this.platform}`]: JSON.stringify(items)});
     }
     /**
      * Returns the previously fetched items for a platform.
      */
-    static getList(platform) {
-        var items = localStorage.getItem(`${this.key}List--${platform}`);
+    static async getList(platform) {
+        var items = (await browser.storage.local.get())?.[`${this.key}List--${platform}`] || localStorage.getItem(`${this.key}List--${platform}`);
         if(!items) return [];
         try {
             var data = JSON.parse(items);
@@ -141,7 +142,7 @@ class Gettable {
      * If download is false, returns null if the item is not in the list.
      */
     static async get(platform, index, download = true) {
-        var items = this.getList(platform);
+        var items = await this.getList(platform);
 
         // If the index is null, return a random item
         if(index == null && items.length)
@@ -168,27 +169,27 @@ class Gettable {
     /**
      * Returns whether we should display the next item or not.
      */
-    static get paused() {
-        return !!+localStorage.getItem(`${this.key}Paused`);
+    static async getPaused() {
+        return !!+((await browser.storage.local.get())?.paused ?? localStorage.getItem(`${this.key}Paused`));
     }
     /**
      * Pauses or unpauses the display of items.
      */
-    static setPaused(paused = null) {
+    static async setPaused(paused = null) {
         if(paused == null)
-            paused = !this.paused;
-        localStorage.setItem(`${this.key}Paused`, +paused);
+            paused = !(await this.getPaused());
+        await browser.storage.local.set({[`${this.key}Paused`]: +paused});
     }
     /**
      * Display the first item, advancing the list if we are not paused.
      */
     static async updateInitial() {
-        await this.update(this.paused ? 0 : 1);
+        await this.update(await this.getPaused() ? 0 : 1);
     }
     /**
      *
      */
-    static getControls(controlsContainer) {
+    static async getControls(controlsContainer) {
         function createButton(text) {
             var button = document.createElement("input");
             button.type = "button";
@@ -208,8 +209,8 @@ class Gettable {
         var counterMax = 60000;
         var counter = counterMax;
 
-        var nextIntv = setInterval(() => {
-            if(!this.paused) {
+        var nextIntv = setInterval(async () => {
+            if(!(await this.getPaused())) {
                 counter -= 500;
                 progressBar.style.setProperty("--width", (counter / counterMax) * 100 + "%");
                 if(counter == 0) {
@@ -222,18 +223,18 @@ class Gettable {
                 progressBar.style.setProperty("--width", "100%");
             }
         }, 500);
-        var updatePause = () => {
-            pause.value = this.paused ? "▶" : "⏸️";
+        var updatePause = async () => {
+            pause.value = await this.getPaused() ? "▶" : "⏸️";
         }
 
         left.addEventListener("click", async () => await this.update(-1));
         right.addEventListener("click", async () => await this.update(1));
 
-        pause.addEventListener("click", () => {
-            this.setPaused();
-            updatePause();
+        pause.addEventListener("click", async () => {
+            await this.setPaused();
+            await updatePause();
         });
-        updatePause();
+        await updatePause();
 
         return [left, pause, right, nextIntv];
     }

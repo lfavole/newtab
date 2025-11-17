@@ -1,5 +1,5 @@
 window.modules = window.modules || {};
-modules.flashcards = function() {
+modules.flashcards = async function() {
     var flashcardContainer = document.createElement("div");
     flashcardContainer.className = "flashcard";
 
@@ -40,31 +40,31 @@ modules.flashcards = function() {
     function getRandomQuestion() {
         return allQuestions[Math.floor(Math.random() * allQuestions.length)];
     }
-    function getQuestion(newQuestion = false) {
+    async function getQuestion(newQuestion = false) {
         if(!newQuestion) {
             try {
-                var question = localStorage.getItem("question");
+                var question = (await browser.storage.local.get())?.question || localStorage.getItem("question");
                 if(question) return JSON.parse(question);
             } catch(err) {}
         }
         return getRandomQuestion();
     }
-    function updateQuestion(newQuestion = false) {
-        var question = getQuestion(newQuestion);
+    async function updateQuestion(newQuestion = false) {
+        var question = await getQuestion(newQuestion);
 
-        localStorage.setItem("question", JSON.stringify(question));
+        await browser.storage.local.set({question: JSON.stringify(question)});
 
         flashcardContainer.classList.remove("revealed");
         questionText.innerHTML = question[0];
     }
-    showAnswer.addEventListener("click", () => {
-        answerText.innerHTML = getQuestion()[1];
+    showAnswer.addEventListener("click", async () => {
+        answerText.innerHTML = await getQuestion()[1];
         flashcardContainer.classList.add("revealed");
     });
-    closeQuestion.addEventListener("click", () => {
-        updateQuestion(true);
+    closeQuestion.addEventListener("click", async () => {
+        await updateQuestion(true);
     });
-    updateQuestion();
+    await updateQuestion();
 
     return function() {
         flashcardContainer.remove();

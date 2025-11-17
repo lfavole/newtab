@@ -1,4 +1,4 @@
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
     if("serviceWorker" in navigator) {
         navigator.serviceWorker.register("sw.js")
         .then(function(reg) {
@@ -9,5 +9,5 @@ window.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    modules.settings();
+    await modules.settings();
 });

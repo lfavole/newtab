@@ -1,4 +1,4 @@
-modules.pictures = function() {
+modules.pictures = async function() {
     var pictureContainer = document.createElement("div");
     pictureContainer.className = "photo";
     document.querySelector("main").appendChild(pictureContainer);
@@ -68,7 +68,7 @@ modules.pictures = function() {
                 return [new Picture({url: `linear-gradient(${angle}deg, ${color1}, ${color2})`, platform: "gradient"})];
             }
             if(platform == "unsplash") {
-                var clientID = localStorage.getItem("unsplashClientID");
+                var clientID = (await browser.storage.local.get())?.unsplashClientID || localStorage.getItem("unsplashClientID");
                 var endpoint = "https://api.unsplash.com/photos/random?count=10";
                 if(!clientID || location.protocol.includes("extension"))
                     endpoint = "https://lfnewtab.vercel.app/unsplash/photos/random?count=10";
@@ -187,16 +187,16 @@ modules.pictures = function() {
         }
     }
 
-    var [_, _, _, nextIntv] = Picture.getControls(controlsContainer);
+    var [_, _, _, nextIntv] = await Picture.getControls(controlsContainer);
 
     setTimeout(async () => await Picture.updateInitial(), 0);
 
-    creditsContainer.addEventListener("dblclick", function() {
+    creditsContainer.addEventListener("dblclick", async function() {
         var clientID = localStorage.getItem("unsplashClientID") || "";
         clientID = prompt("ID client Unsplash :", clientID);
         if(clientID == null) return;
         clientID = (clientID || "").trim();
-        localStorage.setItem("unsplashClientID", clientID);
+        await browser.storage.local.set({unsplashClientID: clientID});
         Picture.update();
     });
 

@@ -1,5 +1,5 @@
 window.modules = window.modules || {};
-modules.quotes = () => {
+modules.quotes = async () => {
     var quotesContainer = document.createElement("div");
     quotesContainer.className = "quote-container";
     document.querySelector("main").appendChild(quotesContainer);
@@ -75,7 +75,7 @@ modules.quotes = () => {
         }
     }
 
-    var [_, _, _, nextIntv] = Quote.getControls(controlsContainer);
+    var [_, _, _, nextIntv] = await Quote.getControls(controlsContainer);
 
     setTimeout(async () => await Quote.updateInitial(), 0);
 
