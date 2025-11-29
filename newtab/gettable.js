@@ -77,7 +77,9 @@ class Gettable {
             await Promise.all(this.platforms.map(platform => this.fetchOne(platform)))
         ).filter(item => item);
         if(items.length) {
-            await getRandomItem(items).display();
+            var randomItem = await getRandomItem(items);
+            this.setIndex(randomItem.platform, await this.getIndex(randomItem.platform) + step);
+            randomItem.display();
             return;
         }
 
@@ -139,14 +141,14 @@ class Gettable {
     }
     /**
      * Returns the item corresponding to the index for a platform, downloading it if specified.
-     * If download is false, returns null if the item is not in the list.
+     * If download is false and the item is not in the list, do not attempt to download it and return null.
      */
     static async get(platform, index, download = true) {
         var items = await this.getList(platform);
 
         // If the index is null, return a random item
         if(index == null && items.length)
-            return items[Math.floor(Math.random() * items.length)];
+            return getRandomItem(items);
 
         // If the index is out of bounds or the list is empty, download an item
         if(index >= items.length || !items.length)
@@ -167,10 +169,10 @@ class Gettable {
         throw Error("display method not implemented.");
     }
     /**
-     * Returns whether we should display the next item or not.
+     * Returns whether we should automatically display the next item or not.
      */
     static async getPaused() {
-        return !!+((await browser.storage.local.get())?.paused ?? localStorage.getItem(`${this.key}Paused`));
+        return !!+((await browser.storage.local.get())?.[`${this.key}Paused`] ?? localStorage.getItem(`${this.key}Paused`));
     }
     /**
      * Pauses or unpauses the display of items.
@@ -179,17 +181,57 @@ class Gettable {
         if(paused == null)
             paused = !(await this.getPaused());
         await browser.storage.local.set({[`${this.key}Paused`]: +paused});
+        await this.updatePause();
     }
     /**
      * Display the first item, advancing the list if we are not paused.
+     * Otherwise, when does the list advance?
+     * If it's the first run (there are no items), always display the first item,
+     * otherwise we never see it.
      */
     static async updateInitial() {
-        await this.update(await this.getPaused() ? 0 : 1);
+        var areThereItems = false;
+        for (var platform of this.platforms) {
+            if ((await this.getList(platform)).length) {
+                areThereItems = true;
+                break;
+            }
+        }
+        await this.update(await this.getPaused() || !areThereItems ? 0 : 1);
     }
     /**
-     *
+     * Update the contents of the pause button.
      */
-    static async getControls(controlsContainer) {
+    static async updatePause() {
+        var paused = await this.getPaused();
+        this.pauseButton.value = paused ? "▶" : "⏸︎";
+
+        // don't recreate the interval if it's not needed
+        // (it's already there and playing, or it's not there and paused)
+        if (this.nextIntv && !paused || !this.nextIntv && paused) return;
+
+        var counterMax = 60000;
+        var counter = counterMax;
+
+        this.nextIntv = setInterval(async () => {
+            if(!(await this.getPaused())) {
+                counter -= 500;
+                this.progressBar.style.setProperty("--width", (counter / counterMax) * 100 + "%");
+                if(counter == 0) {
+                    counter = counterMax;
+                    this.update();
+                }
+            } else {
+                clearInterval(this.nextIntv);
+                counter = counterMax;
+                this.progressBar.style.setProperty("--width", "100%");
+            }
+        }, 500);
+    }
+    /**
+     * Add HTML controls in the specified container to control these elements.
+     */
+    static async addControls(controlsContainer) {
         function createButton(text) {
             var button = document.createElement("input");
             button.type = "button";
@@ -205,37 +247,14 @@ class Gettable {
         var progressBar = document.createElement("div");
         progressBar.className = "progress-bar";
         controlsContainer.appendChild(progressBar);
+        this.progressBar = progressBar;
 
-        var counterMax = 60000;
-        var counter = counterMax;
-
-        var nextIntv = setInterval(async () => {
-            if(!(await this.getPaused())) {
-                counter -= 500;
-                progressBar.style.setProperty("--width", (counter / counterMax) * 100 + "%");
-                if(counter == 0) {
-                    counter = counterMax;
-                    this.update();
-                }
-            } else {
-                clearInterval(nextIntv);
-                counter = counterMax;
-                progressBar.style.setProperty("--width", "100%");
-            }
-        }, 500);
-        var updatePause = async () => {
-            pause.value = await this.getPaused() ? "▶" : "⏸️";
-        }
+        this.pauseButton = pause;
+        this.nextIntv = null;
 
         left.addEventListener("click", async () => await this.update(-1));
         right.addEventListener("click", async () => await this.update(1));
-
-        pause.addEventListener("click", async () => {
-            await this.setPaused();
-            await updatePause();
-        });
-        await updatePause();
-
-        return [left, pause, right, nextIntv];
+        pause.addEventListener("click", async () => await this.setPaused());
+        await this.updatePause();
     }
 }

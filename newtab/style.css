@@ -28,6 +28,7 @@ main > * {
     position: absolute;
     left: 0;
     top: 0;
+    width: 8em;
 }
 .modules-container {
     margin: 0;
@@ -175,7 +176,7 @@ main > * {
     width: calc(var(--width) - 2em);
     height: 0.2em;
     background-color: #fff;
-    transition: width 0.4s ease-in-out;
+    transition: width 0.4s linear;
     border-radius: 0.1em;
     z-index: 1;
 }

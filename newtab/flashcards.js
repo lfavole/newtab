@@ -43,22 +43,27 @@ modules.flashcards = async function() {
     async function getQuestion(newQuestion = false) {
         if(!newQuestion) {
             try {
-                var question = (await browser.storage.local.get())?.question || localStorage.getItem("question");
-                if(question) return JSON.parse(question);
+                var storedQuestion = (await browser.storage.local.get())?.question || localStorage.getItem("question");
+                if(storedQuestion) return allQuestions.find(([key, question, answer]) => key == JSON.parse(storedQuestion) || question == JSON.parse(storedQuestion));
             } catch(err) {}
         }
         return getRandomQuestion();
     }
     async function updateQuestion(newQuestion = false) {
-        var question = await getQuestion(newQuestion);
+        var [key, question, answer] = await getQuestion(newQuestion);
 
-        await browser.storage.local.set({question: JSON.stringify(question)});
+        await browser.storage.local.set({question: JSON.stringify(key)});
 
         flashcardContainer.classList.remove("revealed");
-        questionText.innerHTML = question[0];
+        while (questionText.firstChild)
+            questionText.firstChild.remove();
+        questionText.append(question);
     }
     showAnswer.addEventListener("click", async () => {
-        answerText.innerHTML = await getQuestion()[1];
+        var [key, question, answer] = await getQuestion();
+        while (answerText.firstChild)
+            answerText.firstChild.remove();
+        answerText.append(answer);
         flashcardContainer.classList.add("revealed");
     });
     closeQuestion.addEventListener("click", async () => {

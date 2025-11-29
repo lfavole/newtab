@@ -6,7 +6,6 @@ modules.quotes = async () => {
 
     var controlsContainer = document.createElement("div");
     controlsContainer.className = "controls quote-controls";
-
     document.querySelector("main").appendChild(controlsContainer);
 
     var quoteElement = document.createElement("div");
@@ -75,12 +74,13 @@ modules.quotes = async () => {
         }
     }
 
-    var [_, _, _, nextIntv] = await Quote.getControls(controlsContainer);
+    await Quote.addControls(controlsContainer);
 
     setTimeout(async () => await Quote.updateInitial(), 0);
 
     return function() {
-        clearInterval(nextIntv);
+        clearInterval(Quote.nextIntv);
         quotesContainer.remove();
+        controlsContainer.remove();
     };
 };

@@ -9,30 +9,18 @@ modules.pictures = async function() {
 
     var controlsContainer = document.createElement("div");
     controlsContainer.className = "controls photo-controls";
-
     document.querySelector("main").appendChild(controlsContainer);
 
-    function deleteImageMetadata() {
-        document.body.style.backgroundImage = null;
-        pictureContainer.src = null;
-        pictureContainer.style.backgroundImage = null;
-        pictureContainer.classList.remove("loaded");
-        creditsContainer.innerHTML = "";
-    }
-
-    function getHexPart() {
+    function getRandomHexPart() {
         return ("00" + Math.floor(Math.random() * 256).toString(16)).slice(-2)
-    }
-    function square(x) {
-        return x * x;
     }
     function isColorDark(color) {
         if(!color || !color.substring(1)) return false;
         // https://alienryderflex.com/hsp.html
         return Math.sqrt(
-            0.299 * square(parseInt(color.substring(1, 3), 16))
-            + 0.587 * square(parseInt(color.substring(3, 5), 16))
-            + 0.114 * square(parseInt(color.substring(5, 7), 16))
+            0.299 * parseInt(color.substring(1, 3), 16) ** 2
+            + 0.587 * parseInt(color.substring(3, 5), 16) ** 2
+            + 0.114 * parseInt(color.substring(5, 7), 16) ** 2
         ) < 127.5;
     }
     function setBodyColor(color) {
@@ -62,16 +50,18 @@ modules.pictures = async function() {
         }
         static async fetch(platform) {
             if(platform == "gradient") {
-                var color1 = "#" + getHexPart() + getHexPart() + getHexPart();
-                var color2 = "#" + getHexPart() + getHexPart() + getHexPart();
+                var color1 = "#" + getRandomHexPart() + getRandomHexPart() + getRandomHexPart();
+                var color2 = "#" + getRandomHexPart() + getRandomHexPart() + getRandomHexPart();
                 var angle = Math.floor(Math.random() * 360);
                 return [new Picture({url: `linear-gradient(${angle}deg, ${color1}, ${color2})`, platform: "gradient"})];
             }
             if(platform == "unsplash") {
                 var clientID = (await browser.storage.local.get())?.unsplashClientID || localStorage.getItem("unsplashClientID");
-                var endpoint = "https://api.unsplash.com/photos/random?count=10";
-                if(!clientID || location.protocol.includes("extension"))
-                    endpoint = "https://lfnewtab.vercel.app/unsplash/photos/random?count=10";
+                var endpoint = (
+                    clientID
+                    ? "https://api.unsplash.com/photos/random?count=10"
+                    : "https://lfnewtab.vercel.app/unsplash/photos/random?count=10"
+                );
                 try {
                     var resp = await fetch(
                         endpoint,
@@ -111,8 +101,12 @@ modules.pictures = async function() {
             );
         }
         async display() {
-            deleteImageMetadata();
-            creditsContainer.innerHTML = this.getCredits();
+            document.body.style.backgroundImage = null;
+            pictureContainer.src = null;
+            pictureContainer.style.backgroundImage = null;
+            pictureContainer.classList.remove("loaded");
+            creditsContainer.textContent = "";
+            creditsContainer.appendChild(this.getCredits());
 
             if(this.platform == "gradient") {
                 pictureContainer.style.backgroundImage = this.url;
@@ -158,7 +152,7 @@ modules.pictures = async function() {
                 window.removeEventListener("resize", blurhashCallback);
         }
         getCredits() {
-            if(this.platform == "gradient") return "Dégradé aléatoire";
+            if(this.platform == "gradient") return document.createTextNode("Dégradé aléatoire");
 
             var urlRemainder = "?utm_source=lfnewtab&utm_medium=referral";
 
@@ -169,25 +163,50 @@ modules.pictures = async function() {
                 "unsplash": "Unsplash",
             }[this.platform] || this.platform;
 
-            if(!this.pageURL && !this.username && !this.platformURL) return "";
+            if(!this.pageURL && !this.username && !this.platformURL) return document.createTextNode("");
 
-            return (
-                (this.pageURL ? `<a href="${this.pageURL}${urlRemainder}" target="_blank">Photo</a> ` : "Photo ")
-                + (
-                    this.username
-                    ? (
-                        this.userLink
-                        ? `par <a href="${this.userLink}${urlRemainder}" target="_blank">${this.username}</a> `
-                        : `par ${this.username} `
-                    )
-                    : ""
-                )
-                + `sur <a href="${platformURL}${urlRemainder}" target="_blank">${platformName}</a>`
-            );
+            var credits = document.createDocumentFragment();
+
+            // Photo / link to photo
+            if (this.pageURL) {
+                var photoLink = document.createElement("a");
+                photoLink.href = this.pageURL + urlRemainder;
+                photoLink.target = "_blank";
+                photoLink.textContent = "Photo";
+                credits.appendChild(photoLink);
+                credits.appendChild(document.createTextNode(" "));
+            } else {
+                credits.appendChild(document.createTextNode("Photo "));
+            }
+
+            // Author
+            if (this.username) {
+                if (this.userLink) {
+                    credits.appendChild(document.createTextNode("par "));
+                    var userLink = document.createElement("a");
+                    userLink.href = this.userLink + urlRemainder;
+                    userLink.target = "_blank";
+                    userLink.textContent = this.username;
+                    credits.appendChild(userLink);
+                    credits.appendChild(document.createTextNode(" "));
+                } else {
+                    credits.appendChild(document.createTextNode("par " + this.username + " "));
+                }
+            }
+
+            // Platform
+            var platformLink = document.createElement("a");
+            platformLink.href = platformURL + urlRemainder;
+            platformLink.target = "_blank";
+            platformLink.textContent = platformName;
+            credits.appendChild(document.createTextNode("sur "));
+            credits.appendChild(platformLink);
+
+            return credits;
         }
     }
 
-    var [_, _, _, nextIntv] = await Picture.getControls(controlsContainer);
+    await Picture.addControls(controlsContainer);
 
     setTimeout(async () => await Picture.updateInitial(), 0);
 
@@ -201,7 +220,7 @@ modules.pictures = async function() {
     });
 
     return function() {
-        clearInterval(nextIntv);
+        clearInterval(Picture.nextIntv);
         pictureContainer.remove();
         creditsContainer.remove();
         controlsContainer.remove();

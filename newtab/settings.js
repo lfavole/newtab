@@ -8,119 +8,134 @@ modules.settings = async () => {
     summary.textContent = "Paramètres";
     settingsContainer.appendChild(summary);
 
+    var explanations = document.createTextNode("Choisissez les modules activés. Vous pouvez les réorganiser.");
+    settingsContainer.appendChild(explanations);
+
+    var resetButton = document.createElement("input");
+    resetButton.type = "button";
+    resetButton.value = "Réinitialiser";
+    settingsContainer.appendChild(resetButton);
+
     var modulesContainer = document.createElement("ul");
     modulesContainer.className = "modules-container";
     settingsContainer.appendChild(modulesContainer);
 
-    var deactivators = {};
+    class ModuleSelector {
+        constructor(modulesContainer) {
+            this.modulesContainer = modulesContainer;
+            this.defaultModuleNames = ["clock", "greeting", "quotes", "pictures"];
+            this.existingModuleNames = Object.keys(modules).slice();
+            const settingsIndex = this.existingModuleNames.indexOf("settings");
+            if (settingsIndex !== -1) this.existingModuleNames.splice(settingsIndex, 1);
 
-    async function getEnabledModules() {
-        var enabledModules = ((await browser.storage.local.get())?.modules || localStorage.getItem("modules") || "").split(",").filter(mod => existingModules.includes(mod));
-        return enabledModules.length ? enabledModules : defaultModules;
-    }
+            this.allModules = [];
+            this.deactivators = {};
 
-    async function updateEnabledModules() {
-        var enabledModules = [];
-        for(var i = 0, l = modulesList.length; i < l; i++) {
-            if(modulesChecked[i])
-                enabledModules.push(modulesList[i]);
+            this.dragged = null;
+            this.index = null;
+            this.indexDrop = null;
+
+            this.modulesContainer.addEventListener("dragstart", (e) => this.onDragStart(e));
+            this.modulesContainer.addEventListener("dragover", (e) => this.onDragOver(e));
+            this.modulesContainer.addEventListener("drop", (e) => this.onDrop(e));
         }
-        if(enabledModules.length == defaultModules.length && enabledModules.every((val, index) => val == defaultModules[index]))
-            await browser.storage.local.set({modules: ""});
-        else
-            await browser.storage.local.set({modules: enabledModules.join(",")});
-        Object.values(deactivators).forEach(deactivate => deactivate());
-        deactivators = {};
-        for(var module of enabledModules) {
-            deactivators[module] = modules[module]();
-        }
-    }
 
-    async function check({target}) {
-        var itemIndex;
-        var list = modulesContainer.children;
-        for(var i = 0; i < list.length; i += 1) {
-            if(list[i] === target.parentElement){
-                itemIndex = i;
+        async getEnabledModuleNames() {
+            var enabledModuleNames = ((await browser.storage.local.get())?.modules || localStorage.getItem("modules") || "").split(",").filter(mod => this.existingModuleNames.includes(mod));
+            return enabledModuleNames.length ? enabledModuleNames : this.defaultModuleNames;
+        }
+
+        async updateEnabledModules() {
+            var enabledModuleNames = this.allModules.map(([moduleName, enabled]) => enabled && moduleName).filter(x => x);
+            if (
+                enabledModuleNames.length == this.defaultModuleNames.length
+                && enabledModuleNames.every((val, index) => val == this.defaultModuleNames[index])
+            )
+                await browser.storage.local.set({modules: ""});
+            else
+                await browser.storage.local.set({modules: enabledModuleNames.join(",")});
+
+            Object.values(this.deactivators).forEach(deactivate => deactivate?.());
+            this.deactivators = {};
+            for (var module of enabledModuleNames) {
+                this.deactivators[module] = await modules[module]?.();
+            }
+        }
+
+        async tickBox(event) {
+            var target = event.target;
+            var list = this.modulesContainer.children;
+            for (var i = 0; i < list.length; i += 1) {
+                if (list[i] !== target.parentElement) continue;
+                this.allModules[i][1] = target.checked;
+                await this.updateEnabledModules();
                 break;
             }
         }
-        modulesChecked[itemIndex] = target.checked;
-        await updateEnabledModules();
-    }
 
-    var defaultModules = ["clock", "greeting", "quotes", "pictures"];
-    var existingModules = Object.keys(modules);
-    existingModules.splice(existingModules.indexOf("settings"), 1);
+        async initModulesList(reset = false) {
+            while (this.modulesContainer.firstChild)
+                this.modulesContainer.firstChild.remove();
 
-    var modulesList = await getEnabledModules();
-    // the first modules are always enabled
-    var modulesChecked = Array(modulesList.length).fill(true).concat(Array(existingModules.length - modulesList.length).fill(false));
-    for(var mod of existingModules) {
-        if(!modulesList.includes(mod))
-            modulesList.push(mod);
-    }
+            this.allModules = (reset ? this.defaultModuleNames : await this.getEnabledModuleNames()).map(m => [m, true]);
 
-    for(var i = 0, l = modulesList.length; i < l; i++) {
-        var item = document.createElement("li");
-        item.draggable = true;
-        item.dataset.id = i;
-        var checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.checked = modulesChecked[i];
-        checkbox.addEventListener("change", check);
-        item.appendChild(checkbox);
-        var text = document.createTextNode(modulesList[i]);
-        item.appendChild(text);
-        modulesContainer.appendChild(item);
-    }
-
-    // https://stackoverflow.com/a/59536432
-    var dragged;
-    var id;
-    var index;
-    var indexDrop;
-
-    modulesContainer.addEventListener("dragstart", ({target}) => {
-        dragged = target;
-        id = target.dataset.id;
-        var list = modulesContainer.children;
-        for(var i = 0; i < list.length; i += 1) {
-            if(list[i] === dragged){
-                index = i;
-                break;
+            for (var moduleName of this.existingModuleNames) {
+                if (!this.allModules.find(([name]) => name == moduleName))
+                    this.allModules.push([moduleName, false]);
             }
+
+            for (var [moduleName, enabled] of this.allModules) {
+                var item = document.createElement("li");
+                item.draggable = true;
+                var checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.checked = enabled;
+                checkbox.addEventListener("change", this.tickBox.bind(this));
+                item.appendChild(checkbox);
+                var text = document.createTextNode(moduleName);
+                item.appendChild(text);
+                this.modulesContainer.appendChild(item);
+            }
+
+            await this.updateEnabledModules();
         }
-    });
 
-    modulesContainer.addEventListener("dragover", (event) => {
-        event.preventDefault();
-    });
+        // Source: https://stackoverflow.com/a/59536432
 
-    modulesContainer.addEventListener("drop", async ({target}) => {
-        if(target.parentElement == modulesContainer && target.dataset.id !== id) {
-            var module = modulesList[index];
-            var moduleChecked = modulesChecked[index];
-            modulesList.splice(index, 1);
-            modulesChecked.splice(index, 1);
-            var list = modulesContainer.children;
-            for(let i = 0; i < list.length; i += 1) {
-                if(list[i] === target) {
-                    indexDrop = i;
-                    break;
+        onDragStart({ target }) {
+            this.dragged = target;
+            this.index = [...this.modulesContainer.children].findIndex(child => child === this.dragged);
+        }
+
+        onDragOver(event) {
+            event.preventDefault();
+        }
+
+        async onDrop({ target }) {
+            if (target.parentElement === this.modulesContainer && target !== this.dragged) {
+                // temporarily store it and remove it
+                var [moduleName, enabled] = this.allModules[this.index];
+                this.allModules.splice(this.index, 1);
+                this.dragged.remove();
+                // find where we will drop it (in the list without the element)
+                var indexDrop = [...this.modulesContainer.children].findIndex(el => el === target);
+                if (indexDrop < this.index) {
+                    // if we dropped it before where it currently is, put it before
+                    // because if 2 is dragged over 1, it won't move with after()
+                    target.before(this.dragged);
+                } else {
+                    // otherwise, put it after
+                    target.after(this.dragged);
+                    indexDrop++;
                 }
+                this.allModules.splice(indexDrop, 0, [moduleName, enabled]);
+                // re-enable the modules in the correct order
+                await this.updateEnabledModules();
             }
-            dragged.remove(dragged);
-            modulesList.splice(indexDrop, 0, module);
-            modulesChecked.splice(indexDrop, 0, moduleChecked);
-            if(index > indexDrop) {
-                target.before(dragged);
-            } else {
-                target.after(dragged);
-            }
-            await updateEnabledModules();
         }
-    });
+    }
 
-    await updateEnabledModules();
+    var moduleSelector = new ModuleSelector(modulesContainer);
+    resetButton.addEventListener("click", () => moduleSelector.initModulesList(true));
+    await moduleSelector.initModulesList();
 };
